@@ -27,34 +27,36 @@ export class ProductService {
     this.products = productsData as Product[];
   }
 
-  getAll(filters?: ProductFilters): Product[] {
-    let filtered = [...this.products];
+  private applyFilters(filters?: Omit<ProductFilters, 'limit' | 'offset'>): Product[] {
+    let result: Product[] = this.products;
 
     if (filters?.category) {
-      filtered = filtered.filter(
-        (p) => p.categoryName.toLowerCase() === filters.category!.toLowerCase()
-      );
+      const cat = filters.category.toLowerCase();
+      result = result.filter((p) => p.categoryName.toLowerCase() === cat);
     }
 
     if (filters?.subCategory) {
-      filtered = filtered.filter(
-        (p) => p.subCategoryName.toLowerCase() === filters.subCategory!.toLowerCase()
-      );
+      const sub = filters.subCategory.toLowerCase();
+      result = result.filter((p) => p.subCategoryName.toLowerCase() === sub);
     }
 
     if (filters?.search) {
-      const searchLower = filters.search.toLowerCase();
-      filtered = filtered.filter(
+      const q = filters.search.toLowerCase();
+      result = result.filter(
         (p) =>
-          p.title.toLowerCase().includes(searchLower) ||
-          p.categoryName.toLowerCase().includes(searchLower) ||
-          p.subCategoryName.toLowerCase().includes(searchLower)
+          p.title.toLowerCase().includes(q) ||
+          p.categoryName.toLowerCase().includes(q) ||
+          p.subCategoryName.toLowerCase().includes(q)
       );
     }
 
-    const offset = filters?.offset || 0;
-    const limit = filters?.limit || filtered.length;
+    return result;
+  }
 
+  getAll(filters?: ProductFilters): Product[] {
+    const filtered = this.applyFilters(filters);
+    const offset = filters?.offset || 0;
+    const limit = filters?.limit ?? filtered.length;
     return filtered.slice(offset, offset + limit);
   }
 
@@ -81,7 +83,7 @@ export class ProductService {
   }
 
   getTotalCount(filters?: Omit<ProductFilters, 'limit' | 'offset'>): number {
-    return this.getAll(filters).length;
+    return this.applyFilters(filters).length;
   }
 }
 

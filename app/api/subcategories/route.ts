@@ -6,5 +6,7 @@ export async function GET(request: NextRequest) {
   const category = searchParams.get('category') || undefined;
 
   const subCategories = productService.getSubCategories(category);
-  return NextResponse.json({ subCategories });
+  return NextResponse.json({ subCategories }, {
+    headers: { 'Cache-Control': 'public, max-age=86400, stale-while-revalidate=604800' },
+  });
 }
